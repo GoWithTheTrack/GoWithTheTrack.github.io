@@ -1,5 +1,5 @@
 """
-python compile_mesh.py
+python compile_DynamicRetraj.py
 """
 import os
 import sys
@@ -33,8 +33,207 @@ good_example = [
                 ],
                 [
                     "CustomVideo_DynamicRetrajRelative_Ref4New_Boundary_stylized/Pexels_yoga_3_spiral1.mp4"
-                ]
-]
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bear_HeroReveal.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bear_ArcLeft.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bear_Backward.mp4", "wan22_480P_depth"),
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bear_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/bear_RotRight.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/bike-packing_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bike-packing_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bike-packing_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bike-packing_HeroReveal.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bike-packing_RotRight.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bike-packing_spiral1.mp4", "wan22_480P_depth"),
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/bmx-bumps_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/breakdance-flare_spiral1.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-bumps_ArcLeft.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-bumps_Backward.mp4", "wan22_480P"),
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-bumps_HeroReveal.mp4",
+                    "avis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-bumps_RotRight.mp4"
+                ],
+                [
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-trees_ArcLeft.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-trees_HeroReveal.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/bmx-trees_UpForward.mp4", "wan22_480P_depth"),
+                    
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/boat_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/boat_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/boat_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/boat_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/boat_spiral1.mp4"
+                ],  
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/bus_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bus_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bus_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/bus_spiral1.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/camel_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/camel_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/camel_UpForward.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/camel_spiral1.mp4", "wan22_480P_depth")
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/car-roundabout_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/car-roundabout_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/car-roundabout_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/car-roundabout_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/car-roundabout_spiral1.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/car-turn_ArcLeft.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/car-turn_Backward.mp4", "wan21_720P"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/car-turn_HeroReveal.mp4", "wan22_480P"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/car-turn_RotRight.mp4", "wan22_480P_depth")
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/cat-girl_UpForward.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/dog_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/dog_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dog_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dog_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dog_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/dogs-scale_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/dogs-scale_RotRight.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/dog_spiral1.mp4", "wan22_480P"),
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dogs-scale_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dogs-scale_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/dogs-scale_spiral1.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/drift-chicane_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/drift-chicane_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-chicane_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-chicane_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-chicane_UpForward.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/drift-straight_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/drift-straight_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-straight_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-straight_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-straight_UpForward.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/drift-turn_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-turn_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-turn_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-turn_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-turn_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/drift-turn_RotRight.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/flamingo_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/flamingo_Backward.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/flamingo_HeroReveal.mp4", "wan22_480P_depth"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/flamingo_UpForward.mp4", "wan22_480P_depth"),
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/flamingo_spiral1.mp4"
+                    
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/gold-fish_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/gold-fish_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/gold-fish_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/gold-fish_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/gold-fish_RotRight.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/hike_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/hike_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/hike_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/hike_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/hike_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/hike_spiral1.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/horsejump-high_Backward.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/horsejump-high_HeroReveal.mp4", "wan22_480P_depth"),
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/horsejump-low_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/horsejump-low_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/horsejump-low_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/horsejump-low_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/koala_spiral1.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/koala_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/koala_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/koala_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/koala_RotRight.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/libby_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/libby_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/libby_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/libby_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/libby_UpForward.mp4"
+                ],
+                [
+                    #"davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/loading_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/loading_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/loading_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/loading_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/loading_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/loading_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/longboard_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/longboard_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/longboard_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/mbike-trick_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/mbike-trick_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/motocross-bumps_spiral1.mp4",
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/scooter-gray_HeroReveal.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/scooter-gray_ArcLeft.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/scooter-gray_Backward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/scooter-gray_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/scooter-gray_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/scooter-gray_spiral1.mp4"
+                ],
+                [
+                    "davis2017_DynamicRetrajRelative_Ref4New_Boundary_stylized/soapbox_UpForward.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/soapbox_ArcLeft.mp4",
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/soapbox_Backward.mp4","wan22_480P"),
+                    ("davis2017_DynamicRetrajRelative_Ref4New_stylized/soapbox_HeroReveal.mp4", "wan22_480P"),
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/soapbox_RotRight.mp4",
+                    "davis2017_DynamicRetrajRelative_Ref4New_stylized/soapbox_spiral1.mp4",
+                ],                  
+            ]
 
 def convert_path(examples):
     c_examples = []
@@ -343,7 +542,7 @@ def visualize_mesh(example, output_path):
         return None
 
 if __name__ == "__main__":
-    output_dir = "./videos/Mesh Stylization/"
+    output_dir = "./videos/Camera Retrajectory/"
     os.makedirs(output_dir, exist_ok=True)
 
     for idx, example in enumerate(good_examples):
