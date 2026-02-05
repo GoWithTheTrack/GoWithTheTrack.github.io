@@ -1,5 +1,16 @@
 """
-python compile_keypoints.py
+python compile_baseline.py
+
+Now we are comparing against baselines. Here we always have a single refernece frame (correspond to first frame).
+Can you display in 3 x 3 grid in the following manner:
+
+Source Video | Video Track | Reference Image (denoted as "First Frame" in title)
+Tora | Diffusion as Shader | Go-With-The-Flow 
+ ATI | Wan-Move | Generated Video (denoted as "Ours")
+
+Please replace model name  in the path with baselines[i] for obtaining videos correponding to model_names[i] defined below.
+If the path does not exist, please pad it with a blank video.
+Please follow the title name I specified above.
 """
 import os
 import sys
@@ -17,73 +28,84 @@ except ImportError:
     from moviepy.video.VideoClip import ColorClip
 
 ################### Do not modify ###############################
+baselines = ["Tora", "DaS","GWTF","ATI","WanMove"]
+model_names = ["Tora", "Diffusion as Shader", "Go-With-The-Flow", "ATI", "Wan-Move"]
 good_example = [
-                #[
-                #  ("zhizheng_sig_new_stylized/koichi_demoNew.mp4", "wan22_480P")
-                #],
-                
                 [
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4540337-hd_1920_1080_25fps_405281.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4540337-hd_1920_1080_25fps_504393.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4540337-hd_1920_1080_25fps_509533.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4540337-hd_1920_1080_25fps_527173.mp4", "wan22_480P"),
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/bike-packing_3.mp4",
                 ],     
                 [
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4742629-hd_1920_1080_25fps_405281.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4742629-hd_1920_1080_25fps_454033.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4742629-hd_1920_1080_25fps_504393.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/4742629-hd_1920_1080_25fps_509533.mp4", "wan22_480P"),
-                ],
-
-                [
-                    ("yc_human_BodySwap_CenterCrop_Dilate_stylized/4742629-hd_1920_1080_25fps_405281.mp4", "wan22_480P"),
-                    ("yc_human_BodySwap_CenterCrop_Dilate_stylized/4742629-hd_1920_1080_25fps_454033.mp4", "wan22_480P"),
-                    ("yc_human_BodySwap_CenterCrop_Dilate_stylized/4742629-hd_1920_1080_25fps_504393.mp4", "wan22_480P"),
-                    ("yc_human_BodySwap_CenterCrop_Dilate_stylized/4742629-hd_1920_1080_25fps_509533.mp4", "wan22_480P")
-                ],
-                
-                [
-                    ("yc_human_HumanSwap_CenterCrop_stylized/5043938-hd_1920_1080_30fps_405281.mp4", "wan22_480P"),
-                    ("yc_human_HumanSwap_CenterCrop_stylized/5043938-hd_1920_1080_30fps_474262.mp4", "wan22_480P"),
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5043938-hd_1920_1080_30fps_527173.mp4",
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_2.mp4",
                 ],
                 [
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5262394-hd_1920_1080_25fps_527173.mp4", 
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5262394-hd_1920_1080_25fps_504393.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5262394-hd_1920_1080_25fps_474262.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5262394-hd_1920_1080_25fps_454033.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5262394-hd_1920_1080_25fps_405281.mp4",
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_3.mp4",
                 ],
                 [
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5095336-hd_1920_1080_25fps_504393.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5095336-hd_1920_1080_25fps_526239.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5095336-hd_1920_1080_25fps_527173.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5095336-hd_1920_1080_25fps_474262.mp4",
-                    "yc_human_HumanSwap_CenterCrop_Dilate_stylized/5095336-hd_1920_1080_25fps_405281.mp4",
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_0.mp4",
                 ],
                 [
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5095336-hd_1920_1080_25fps_405281.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5095336-hd_1920_1080_25fps_454033.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5095336-hd_1920_1080_25fps_504393.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5095336-hd_1920_1080_25fps_526239.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5095336-hd_1920_1080_25fps_527173.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_9.mp4", "wan22_480P"),
                 ],
                 [
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/4052815-hd_1920_1080_25fps_454033.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/4052815-hd_1920_1080_25fps_474262.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/4052815-hd_1920_1080_25fps_504393.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/4052815-hd_1920_1080_25fps_526239.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/4052815-hd_1920_1080_25fps_527173.mp4"
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/boxing-fisheye_6.mp4",
                 ],
                 [
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_405281.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_454033.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_474262.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_504393.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_509533.mp4",
-                    "yc_human_FaceSwap_CenterCrop_Delta_stylized/5262394-hd_1920_1080_25fps_527173.mp4",
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_0.mp4",
                 ],
-                
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_8.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance_1.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/bus_3.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/car-roundabout_2.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/cat-girl_4.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/color-run_9.mp4",
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/dogs-jump_5.mp4",   
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/dance-jump_5.mp4",  "wan22_480P"),
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/dancing_0.mp4",  "wan22_480P"),
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/drone_7.mp4",  "wan22_480P"),
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/dance-twirl_5.mp4"
+                ],   
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/disk_jockey_5.mp4"
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/gold-fish_0.mp4",  "wan22_480P"),
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/scooter-board_2.mp4", "wan22_480P"),   
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/libby_2.mp4",  "wan22_480P"),
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/libby_0.mp4",
+                ],
+                [
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/loading_9.mp4", "wan22_480P")
+                ],
+                [
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/lindy_hop_1.mp4"
+                ],             
             ]
 
 def convert_path(examples):
@@ -310,27 +332,20 @@ def process_track_data(track_path, target_h, target_w):
 def generate_ref_clip(ref_dir, read_name, save_name, type, width, height, fps, duration, tmp_dir):
     """
     Helper to generate reference clips.
-    read_name: actual file name on disk (e.g. '0')
-    save_name: unique name for the output video
     """
     clip_path = os.path.join(tmp_dir, f"{save_name}_{type}.mp4")
-
+    
     if os.path.exists(clip_path):
         return clip_path
-    
+        
     img_path = os.path.join(ref_dir, f"{read_name}.png")
     npy_path = os.path.join(ref_dir, f"{read_name}.npy")
     
     if not os.path.exists(img_path):
-        # Only print error if it's not the unshared placeholder '100' which might genuinely be absent
-        if read_name != "100":
-            print(f"Error: Missing reference image: {img_path}")
         return None
         
     if not os.path.exists(npy_path):
-        if read_name != "100":
-            print(f"Error: Missing reference track: {npy_path}")
-        return None
+        pass
 
     try:
         if type == "img":
@@ -344,6 +359,7 @@ def generate_ref_clip(ref_dir, read_name, save_name, type, width, height, fps, d
             vis.save_video_clip(frames, filename=f"{save_name}_{type}")
             
         elif type == "trk":
+            if not os.path.exists(npy_path): return None
             tr, final_vis = process_track_data(npy_path, height, width)
             frames = np.zeros((len(tr), height, width, 3), dtype=np.uint8)
             vis = Visualizer(save_dir=tmp_dir, pad_value=0, linewidth=2, mode="rainbow", fps=int(fps))
@@ -356,10 +372,10 @@ def generate_ref_clip(ref_dir, read_name, save_name, type, width, height, fps, d
 
 def visualize_mesh(example, output_path):
     """
-    BulletTime Shared Reference Layout:
-    Row 1: Source Video | Shared Reference Image 1 | Shared Reference Image 2 | Shared Reference Image 3
-    Row 2: Blank | Shared Reference Track 1 | Shared Reference Track 2 | Shared Reference Track 3
-    Row 3+: | Generated Video {i} | Video Track | Unshared Reference Image | Unshared Reference Track |
+    3x3 Grid Layout (Labels Cleaned):
+    Source Video | Video Track | First Frame
+    Tora         | Diffusion as Shader | Go-With-The-Flow
+    ATI          | Wan-Move            | Ours
     """
     if not example or len(example) == 0:
         return None
@@ -367,15 +383,15 @@ def visualize_mesh(example, output_path):
     # --- Step 1: Base Info ---
     first_item = example[0]
     base_path, model_name, sample_name = first_item
-    app_name = os.path.basename(base_path.strip('/'))
     
     log_dir_common = os.path.join(base_path, "log", sample_name)
     source_video_path = os.path.join(log_dir_common, "video.mp4")
     
-    gen_video_path_1 = os.path.join(base_path, model_name, f"{sample_name}.mp4")
+    gen_video_path_ours = os.path.join(base_path, model_name, f"{sample_name}.mp4")
+    
     props = None
-    if os.path.exists(gen_video_path_1):
-        props = get_video_properties(gen_video_path_1)
+    if os.path.exists(gen_video_path_ours):
+        props = get_video_properties(gen_video_path_ours)
     if not props and os.path.exists(source_video_path):
         props = get_video_properties(source_video_path)
     
@@ -387,125 +403,82 @@ def visualize_mesh(example, output_path):
     if w % 2 != 0: w -= 1
     if h % 2 != 0: h -= 1
 
-    tmp_dir = "/tmp_visuals_swap2"
+    tmp_dir = "/tmp_visuals_baseline"
     os.makedirs(tmp_dir, exist_ok=True)
     
     white_video_path = os.path.join(tmp_dir, "white_spacer.mp4")
     get_white_video(white_video_path, width=w, height=h, duration=duration, fps=fps)
 
-    # --- Step 2: Shared References (Exclude '100') ---
-    shared_ref_imgs = []
-    shared_ref_tracks = []
+    # --- Step 2: Prepare Common Elements ---
     
-    ref_dir = os.path.join(log_dir_common, "ref")
-    if os.path.exists(ref_dir):
-        all_pngs = sorted([f for f in os.listdir(ref_dir) if f.endswith(".png")])
-        for png_file in all_pngs:
-            base_name = os.path.splitext(png_file)[0]
-            if base_name == "100": continue 
-            
-            unique_save_name = f"{app_name}_{sample_name}_{base_name}"
-            img_clip = generate_ref_clip(ref_dir, base_name, unique_save_name, "img", w, h, fps, duration, tmp_dir)
-            trk_clip = generate_ref_clip(ref_dir, base_name, unique_save_name, "trk", w, h, fps, duration, tmp_dir)
-            
-            if img_clip and trk_clip:
-                shared_ref_imgs.append(img_clip)
-                shared_ref_tracks.append(trk_clip)
+    track_path = os.path.join(log_dir_common, "track.npy")
+    main_trk_name = f"{sample_name}_main_trk"
+    main_trk_path = os.path.join(tmp_dir, f"{main_trk_name}.mp4")
     
-    while len(shared_ref_imgs) < 3:
-        shared_ref_imgs.append(white_video_path)
-        shared_ref_tracks.append(white_video_path)
-
-    # --- Step 3: Build Grid List (Order matters!) ---
-    # using list of tuples (Label, Path) to convert to dict later
-    grid_list = []
-
-    # === Row 1 ===
-    src_path = source_video_path if os.path.exists(source_video_path) else white_video_path
-    if not os.path.exists(source_video_path): print(f"Error: Missing Source Video: {source_video_path}")
-    
-    grid_list.append(("Source Video", src_path))
-    grid_list.append(("Shared Reference Image 1", shared_ref_imgs[0]))
-    grid_list.append(("Shared Reference Image 2", shared_ref_imgs[1]))
-    grid_list.append(("Shared Reference Image 3", shared_ref_imgs[2]))
-
-    # === Row 2 ===
-    grid_list.append((" ", white_video_path))
-    grid_list.append(("Shared Reference Track 1", shared_ref_tracks[0]))
-    grid_list.append(("Shared Reference Track 2", shared_ref_tracks[1]))
-    grid_list.append(("Shared Reference Track 3", shared_ref_tracks[2]))
-
-    # === Row 3+: Per Stylization ===
-    for i, item in enumerate(example):
-        base_p, mod_n, samp_n = item
-        
-        this_log_dir = os.path.join(base_p, "log", samp_n)
-        this_gen_path = os.path.join(base_p, mod_n, f"{samp_n}.mp4")
-        this_track_path = os.path.join(this_log_dir, "track.npy")
-        this_ref_dir = os.path.join(this_log_dir, "ref")
-        
-        # 1. Gen Video
-        if os.path.exists(this_gen_path):
-            gen_path = this_gen_path
-        else:
-            print(f"Error: Missing generated video: {this_gen_path}")
-            gen_path = white_video_path
-        
-        # 2. Main Track
-        main_trk_name = f"{samp_n}_main_trk"
-        main_trk_path = os.path.join(tmp_dir, f"{main_trk_name}.mp4")
-        if not os.path.exists(main_trk_path):
-            try:
-                tr, final_vis = process_track_data(this_track_path, h, w)
+    if not os.path.exists(main_trk_path):
+        try:
+            if os.path.exists(track_path):
+                tr, final_vis = process_track_data(track_path, h, w)
                 frames = np.zeros((len(tr), h, w, 3), dtype=np.uint8)
                 vis = Visualizer(save_dir=tmp_dir, pad_value=0, linewidth=2, mode="rainbow", fps=int(fps))
                 vis.visualize(video=frames, tracks=tr, visibility=final_vis, filename=main_trk_name, save_video=True)
-            except Exception as e:
-                print(f"Error generating track for {samp_n}: {e}")
+            else:
                 get_white_video(main_trk_path, w, h, duration, fps)
-        
-        # 3. Unshared Ref (100.png)
-        unshared_img = white_video_path
-        unshared_trk = white_video_path
-        
-        unique_unshared_name = f"{samp_n}_100"
-        u_img = generate_ref_clip(this_ref_dir, "100", unique_unshared_name, "img", w, h, fps, duration, tmp_dir)
-        u_trk = generate_ref_clip(this_ref_dir, "100", unique_unshared_name, "trk", w, h, fps, duration, tmp_dir)
-        
-        if u_img: unshared_img = u_img
-        if u_trk: unshared_trk = u_trk
+        except:
+            get_white_video(main_trk_path, w, h, duration, fps)
 
-        # Append Row items
-        grid_list.append((f"Generated Video {i+1}", gen_path))
-        
-        # Use simple label if it's the first gen video, or numbered? 
-        # Prompt said "Video Track", "Unshared..." implying singular column headers essentially.
-        # But stack_videos usually labels every cell.
-        # To avoid duplicate keys, we might need unique spacing in keys if labels must be identical visually.
-        # However, "Video Track" is distinct enough. But if we have 5 rows, we have 5 "Video Track" labels?
-        # Standard dicts don't allow duplicate keys.
-        
-        # We will append unique whitespace to keys to make them distinct but look the same if printed
-        suffix = " " * i
-        grid_list.append((f"Video Track{suffix}", main_trk_path))
-        grid_list.append((f"Unshared Reference Image{suffix}", unshared_img))
-        grid_list.append((f"Unshared Reference Track{suffix}", unshared_trk))
+    ref_dir = os.path.join(log_dir_common, "ref")
+    ref_0_name = f"{sample_name}_ref_0_img"
+    ref_0_path = generate_ref_clip(ref_dir, "0", ref_0_name, "img", w, h, fps, duration, tmp_dir)
+    if not ref_0_path:
+        ref_0_path = white_video_path
 
-    # --- Convert to Dict ---
-    # We construct the dict sequentially. Python 3.7+ preserves this order.
+    # --- Step 3: Prepare Baseline Videos ---
+    baseline_video_paths = {}
+    
+    for i, bl_key in enumerate(baselines):
+        bl_path = os.path.join(base_path, bl_key, f"{sample_name}.mp4")
+        
+        if os.path.exists(bl_path):
+            baseline_video_paths[model_names[i]] = bl_path
+        else:
+            baseline_video_paths[model_names[i]] = white_video_path
+
+    # --- Step 4: Build 3x3 Grid ---
+    # Using list of tuples to maintain order and clean labels
+    grid_list = []
+
+    # Row 1
+    src_p = source_video_path if os.path.exists(source_video_path) else white_video_path
+    grid_list.append(("Source Video", src_p))
+    grid_list.append(("Video Track", main_trk_path))
+    grid_list.append(("First Frame", ref_0_path))
+
+    # Row 2
+    grid_list.append(("Tora", baseline_video_paths.get("Tora", white_video_path)))
+    grid_list.append(("Diffusion as Shader", baseline_video_paths.get("Diffusion as Shader", white_video_path)))
+    grid_list.append(("Go-With-The-Flow", baseline_video_paths.get("Go-With-The-Flow", white_video_path)))
+
+    # Row 3
+    grid_list.append(("ATI", baseline_video_paths.get("ATI", white_video_path)))
+    grid_list.append(("Wan-Move", baseline_video_paths.get("Wan-Move", white_video_path)))
+    ours_p = gen_video_path_ours if os.path.exists(gen_video_path_ours) else white_video_path
+    grid_list.append(("Ours", ours_p))
+
+    # Convert to Dict
     grid_inputs = {label: path for label, path in grid_list}
 
     # --- Step 5: Stack ---
     try:
         print(f"Stacking {len(grid_inputs)} videos into {output_path}...")
-        stack_videos.stack_videos(grid_inputs, output_path, cols=4)
+        stack_videos.stack_videos(grid_inputs, output_path, cols=3)
         return output_path
     except Exception as e:
         print(f"Error in stack_videos: {e}")
         return None
 
 if __name__ == "__main__":
-    output_dir = "./videos/Keypoint-based Appearance Transfer/"
+    output_dir = "./videos/First Frame Stylization and Baseline Comparison/"
     os.makedirs(output_dir, exist_ok=True)
 
     for idx, example in enumerate(good_examples):
