@@ -38,19 +38,19 @@ good_example = [
                     "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_2.mp4",
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_3.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_3.mp4", "wan22_480P")
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_0.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_0.mp4", "wan22_480P")
                 ],
                 [
                     ("stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_9.mp4", "wan22_480P"),
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/boxing-fisheye_6.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/boxing-fisheye_6.mp4", "wan22_480P"),
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_0.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_0.mp4", "wan22_480P"),
                 ],
                 [
                     "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_8.mp4",
@@ -59,13 +59,13 @@ good_example = [
                     "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance_1.mp4",
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bus_3.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/bus_3.mp4", "wan22_480P")
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/car-roundabout_2.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/car-roundabout_2.mp4", "wan22_480P")
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/cat-girl_4.mp4",
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/cat-girl_4.mp4", "wan22_480P"),
                 ],
                 [
                     "stylized_davis2017_delta_AblationPureDelta_stylized/color-run_9.mp4",
@@ -83,10 +83,10 @@ good_example = [
                     ("stylized_davis2017_delta_AblationPureDelta_stylized/drone_7.mp4",  "wan22_480P"),
                 ],
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/dance-twirl_5.mp4"
+                    ("stylized_davis2017_delta_AblationPureDelta_stylized/dance-twirl_5.mp4", "wan22_480P")
                 ],   
                 [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/disk_jockey_5.mp4"
+                    "stylized_davis2017_delta_AblationPureDelta_stylized/disc_jockey_5.mp4"
                 ],
                 [
                     ("stylized_davis2017_delta_AblationPureDelta_stylized/gold-fish_0.mp4",  "wan22_480P"),

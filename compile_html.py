@@ -32,6 +32,13 @@ import argparse
 
 # --- HTML Template ---
 # NOTE: All CSS and JS braces are doubled {{ }} to escape them for Python's .format()
+import os
+import glob
+import json
+import argparse
+
+# --- HTML Template ---
+# NOTE: All CSS and JS braces are doubled {{ }} to escape them for Python's .format()
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,11 +49,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
+            background-color: #ffffff; /* Changed to White */
+            color: #333333; /* Changed to Dark Grey */
             margin: 0;
             padding: 0;
-            display: flex; /* Flex layout for Sidebar + Main Content */
+            display: flex; 
         }}
         
         /* --- Sidebar: Dataset Selection --- */
@@ -54,16 +61,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             position: fixed;
             top: 0;
             left: 0;
-            width: 250px; /* Fixed width for sidebar */
+            width: 250px; 
             height: 100vh;
-            background-color: #181818;
-            border-right: 1px solid #333;
+            background-color: #f4f4f4; /* Changed to Light Grey */
+            border-right: 1px solid #ddd; /* Lighter border */
             padding: 10px;
             z-index: 1002;
             display: flex;
-            flex-direction: column; /* Vertical Stacking */
+            flex-direction: column; 
             gap: 5px;
-            overflow-y: auto; /* Scrollable if many datasets */
+            overflow-y: auto; 
             box-sizing: border-box;
         }}
 
@@ -72,16 +79,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             width: 8px;
         }}
         .dataset-nav::-webkit-scrollbar-thumb {{
-            background: #444; 
+            background: #ccc; /* Lighter thumb */
             border-radius: 4px;
         }}
         .dataset-nav::-webkit-scrollbar-track {{
-            background: #181818; 
+            background: #f4f4f4; /* Lighter track */
         }}
 
         .dataset-btn {{
             background-color: transparent;
-            color: #aaa;
+            color: #555; /* Darker text */
             border: 1px solid transparent;
             padding: 10px 12px;
             border-radius: 6px;
@@ -90,24 +97,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             font-weight: 500;
             text-align: left;
             transition: all 0.2s;
-            word-break: break-word; /* Handle long dataset names */
+            word-break: break-word; 
             line-height: 1.4;
         }}
 
         .dataset-btn:hover {{
-            background-color: #2a2d2e;
-            color: #fff;
+            background-color: #e0e0e0; /* Light hover */
+            color: #000;
         }}
 
         .dataset-btn.active {{
-            background-color: #37373d;
-            color: #fff;
-            border-left: 3px solid #0078d4; /* Accent mark on left */
+            background-color: #dcdcdc; /* Light active state */
+            color: #000;
+            border-left: 3px solid #0078d4; 
         }}
 
         /* --- Main Content Layout --- */
         .main-content {{
-            margin-left: 250px; /* Leave space for sidebar */
+            margin-left: 250px; 
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -116,7 +123,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         h1 {{
             text-align: center;
-            color: #fff;
+            color: #222; /* Dark Heading */
             margin-top: 40px; 
             margin-bottom: 30px;
             font-weight: 300;
@@ -133,15 +140,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }}
         
         .card {{
-            background-color: #000;
+            background-color: #fff; /* White Card */
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Softer shadow */
             width: 90%; 
             max-width: 1000px; 
-            border: 1px solid #333;
+            border: 1px solid #eee; /* Light border */
             min-height: 200px;
-            display: none; /* Hidden by default */
+            display: none; 
         }}
         
         .card.visible {{
@@ -152,13 +159,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             width: 100%;
             height: auto;
             display: block;
-            background: #000;
+            background: #f0f0f0; /* Light placeholder */
         }}
         
         .caption-box {{
             padding: 15px;
-            background-color: #1a1a1a;
-            border-top: 1px solid #333;
+            background-color: #f9f9f9; /* Light caption background */
+            border-top: 1px solid #eee;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
             line-height: 1.5;
@@ -172,11 +179,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         /* --- File Path Styling --- */
         .file-path {{
             padding: 8px 15px;
-            background-color: #111;
-            border-top: 1px solid #222;
+            background-color: #f4f4f4;
+            border-top: 1px solid #ddd;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 11px;
-            color: #666;
+            color: #555;
             word-break: break-all;
             user-select: text;
         }}
@@ -328,7 +335,9 @@ def generate_single_index(input_folder):
                         if isinstance(data, list):
                             for line in data:
                                 text = line.get('text', '')
-                                color = line.get('color', [255, 255, 255])
+                                # Changed default from [255,255,255] (white) to [0,0,0] (black) 
+                                # so it is visible on the white background.
+                                color = line.get('color', [0, 0, 0]) 
                                 hex_color = "#{:02x}{:02x}{:02x}".format(*color)
                                 caption_html += f'<span class="caption-line" style="color: {hex_color};">{text}</span>'
                 except Exception as e:

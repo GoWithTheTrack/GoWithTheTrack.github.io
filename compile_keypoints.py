@@ -315,8 +315,8 @@ def generate_ref_clip(ref_dir, read_name, save_name, type, width, height, fps, d
     """
     clip_path = os.path.join(tmp_dir, f"{save_name}_{type}.mp4")
 
-    if os.path.exists(clip_path):
-        return clip_path
+    #if os.path.exists(clip_path):
+    #    return clip_path
     
     img_path = os.path.join(ref_dir, f"{read_name}.png")
     npy_path = os.path.join(ref_dir, f"{read_name}.npy")
@@ -387,7 +387,7 @@ def visualize_mesh(example, output_path):
     if w % 2 != 0: w -= 1
     if h % 2 != 0: h -= 1
 
-    tmp_dir = "/tmp_visuals_swap2"
+    tmp_dir = "/tmp_visuals_swap3"
     os.makedirs(tmp_dir, exist_ok=True)
     
     white_video_path = os.path.join(tmp_dir, "white_spacer.mp4")

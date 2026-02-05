@@ -1,491 +1,850 @@
 """
-python compile_baseline.py
+conda activate das
+python compile_julien.py
 
-Now we are comparing against baselines. Here we always have a single refernece frame (correspond to first frame).
-Can you display in 3 x 3 grid in the following manner:
+Input:
+/root/Netflix/myproject/train/webpage/eval_data/eval_data/jphilip_delighting/
+13470978_1280_720_24fps        3127085-hd_1280_720_24fps      3326746-hd_1280_720_24fps      3770033-hd_1280_720_25fps
+13470978_1280_720_24fps.mp4    3127085-hd_1280_720_24fps.mp4  3326746-hd_1280_720_24fps.mp4  3770033-hd_1280_720_25fps.mp4
+3064220-hd_1280_720_24fps      3135811-hd_1280_720_24fps      3327058-hd_1280_720_24fps      7578544-hd_1280_720_30fps
+3064220-hd_1280_720_24fps.mp4  3135811-hd_1280_720_24fps.mp4  3327058-hd_1280_720_24fps.mp4  7578544-hd_1280_720_30fps.mp4
 
-Source Video | Video Track | Reference Image (denoted as "First Frame" in title)
-Tora | Diffusion as Shader | Go-With-The-Flow 
- ATI | Wan-Move | Generated Video (denoted as "Ours")
+/root/Netflix/myproject/train/webpage/eval_data/eval_data/jphilip_delighting/13470978_1280_720_24fps/frame_00001.png
+    - frame_00001.png
 
-Please replace model name  in the path with baselines[i] for obtaining videos correponding to model_names[i] defined below.
-If the path does not exist, please pad it with a blank video.
-Please follow the title name I specified above.
+/Netflix/myproject/train/webpage/eval_data/eval_data/julien_final_stylized/
+├── wan22_720P/                     <-- [model_path]
+│   ├── 13470978..._Ref2.mp4        <-- "Ours" stylized results (from good_examples list)
+│   ├── 3327058..._Ref2.mp4
+│   └── ...
+└── log/                            <-- Derived relative to model_path
+    └── [Video_ID_Prefix]/          <-- e.g., "13470978_1280_720_24fps_albedo"
+        ├── video.mp4               <-- Ground Truth / Source Video
+        ├── track.npy               <-- Motion tracking data (UVZ coordinates & visibility)
+        └── ref/                    <-- Reference Images folder
+            ├── frame_00000.png     <-- First frame reference
+            ├── ...
+            └── frame_00048.png     <-- Last frame reference
+
+Output:
+./videos/ (Relative to script execution directory)
+└── Temporal Stabilization/
+    ├── [Video_Name_1].mp4          <-- Final Grid: Source | Naive | Ours | Tracking | Refs
+    ├── [Video_Name_2].mp4
+    └── ...
+
+Tmp:
+/tmp_webpage/ (or ./../tmp_webpage/)
+├── tmp_jul/                        <-- Stores compiled "Naive" videos
+│   └── [Mode]_[Video_ID]/          <-- e.g., "albedo_13470978..."
+│       └── video.mp4               <-- Converted from .exr sequence
+│
+├── tmp_vis/                        <-- Stores Motion Tracking visualizations
+│   └── [Video_ID]_720/
+│       ├── videos.txt
+│       ├── trackings.txt
+│       ├── videos/                 <-- Standard visual output
+│       │   └── overlay.mp4
+│       └── tracking/               <-- Visuals with motion vectors drawn
+│           └── overlay_tracking.mp4
+│
+└── tmp_julien/                     <-- Stores converted Reference Images
+    └── [Video_ID]_ref/
+        ├── 0.png                   <-- Converted to video clip format
+        └── 48.png                  <-- Converted to video clip format
 """
+
+import torch, os, json, sys
+sys.path.append(".")
+import stack_videos
 import os
-import sys
+from decord import VideoReader, cpu
+import mediapy as media
+import numpy as np
+from PIL import Image
+import cv2
+import imageio
+import cv2
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont # Added for better text support
+
+from PIL import Image
+import os
+from decord import VideoReader, cpu
+import numpy as np
+import mediapy as media
+
+
+import fsspec
+from contextlib import contextmanager
+import tempfile
+import imageio
+import subprocess
+
+import os
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+import torch
+import flow_vis
+
+
+import random
+from datetime import datetime
+
 from matplotlib import cm
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+from moviepy.editor import ImageSequenceClip
+import matplotlib.pyplot as plt
 from tqdm import tqdm
-import stack_videos
 
-# Handle MoviePy for generating the white spacer video if needed
-try:
-    from moviepy.editor import ColorClip
-except ImportError:
-    from moviepy.video.VideoClip import ColorClip
+import OpenEXR
+import Imath
+import numpy as np
+import sys
+import cv2
+###############################################################
+good_examples = [#"13470978_1280_720_24fps_albedo_Original.gif",
+                 #"3327058-hd_1280_720_24fps_albedo_Ref1_Original.mp4",
+                 "13470978_1280_720_24fps_albedo_Ref2.mp4",
+                 "3327058-hd_1280_720_24fps_albedo_Ref2.mp4", #must have
+                 #"13470978_1280_720_24fps_albedo_Ref2_Original.mp4",
+                 #"3327058-hd_1280_720_24fps_albedo_Ref2_Original.mp4",
+                 "3327058-hd_1280_720_24fps_lighting_Ref2.mp4", #must have
+                 #"3135811-hd_1280_720_24fps_albedo_Ref1_Original.mp4",
+                 "3135811-hd_1280_720_24fps_albedo_Ref2.mp4",
+                 "3770033-hd_1280_720_25fps_albedo_Ref2.mp4", #must have
+                 #"3135811-hd_1280_720_24fps_albedo_Ref2_Original.mp4",
+                 #3770033-hd_1280_720_25fps_albedo_Ref2_Original.mp4",
+                 #"3135811-hd_1280_720_24fps_lighting.mp4",
+                 "3770033-hd_1280_720_25fps_lighting_Ref2.mp4",
+                 #"7578544-hd_1280_720_30fps_albedo_Original.mp4",
+                 "3326746-hd_1280_720_24fps_albedo_Ref2.mp4", #must have
+                 #"3326746-hd_1280_720_24fps_albedo_Ref2_Original.mp4",
+                 "7578544-hd_1280_720_30fps_albedo_Ref2.mp4",
+                 #"7578544-hd_1280_720_30fps_albedo_Ref2_Original.mp4",
+                 "7578544-hd_1280_720_30fps_lighting_Ref2.mp4", #must have
+                 #"3327058-hd_1280_720_24fps_albedo_Ref1_Original.gif"
+                ]
+model_path = "/root/Netflix/myproject/train/webpage/eval_data/eval_data/julien_final_stylized/wan22_720P/"
+#################################################################
 
-################### Do not modify ###############################
-baselines = ["Tora", "DaS","GWTF","ATI","WanMove"]
-model_names = ["Tora", "Diffusion as Shader", "Go-With-The-Flow", "ATI", "Wan-Move"]
-good_example = [
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bike-packing_3.mp4",
-                ],     
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_2.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-bumps_3.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_0.mp4",
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/bmx-trees_9.mp4", "wan22_480P"),
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/boxing-fisheye_6.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_0.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance-flare_8.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/breakdance_1.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/bus_3.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/car-roundabout_2.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/cat-girl_4.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/color-run_9.mp4",
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/dogs-jump_5.mp4",   
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/dance-jump_5.mp4",  "wan22_480P"),
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/dancing_0.mp4",  "wan22_480P"),
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/drone_7.mp4",  "wan22_480P"),
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/dance-twirl_5.mp4"
-                ],   
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/disk_jockey_5.mp4"
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/gold-fish_0.mp4",  "wan22_480P"),
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/scooter-board_2.mp4", "wan22_480P"),   
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/libby_2.mp4",  "wan22_480P"),
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/libby_0.mp4",
-                ],
-                [
-                    ("stylized_davis2017_delta_AblationPureDelta_stylized/loading_9.mp4", "wan22_480P")
-                ],
-                [
-                    "stylized_davis2017_delta_AblationPureDelta_stylized/lindy_hop_1.mp4"
-                ],             
-            ]
+def read_exr(file_path):
+    """
+    Read an EXR file and return the image data as a numpy array.
+    
+    Args:
+        file_path (str): Path to the EXR file
+        
+    Returns:
+        numpy.ndarray: Image data
+    """
+    # Open the EXR file
+    exr_file = OpenEXR.InputFile(file_path)
+    
+    # Get the header
+    header = exr_file.header()
+    
+    # Get image dimensions
+    dw = header['dataWindow']
+    width = dw.max.x - dw.min.x + 1
+    height = dw.max.y - dw.min.y + 1
+    
+    # Get channel names
+    channels = header['channels'].keys()
+    print(f"Available channels: {list(channels)}")
+    
+    # Read RGB channels (or available channels)
+    channel_data = {}
+    pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
+    
+    for channel in ['R', 'G', 'B']:
+        if channel in channels:
+            channel_str = exr_file.channel(channel, pixel_type)
+            channel_data[channel] = np.frombuffer(channel_str, dtype=np.float32)
+            channel_data[channel] = channel_data[channel].reshape((height, width))
+    
+    # Stack channels into a single array
+    if len(channel_data) == 3:
+        image = np.stack([channel_data['R'], channel_data['G'], channel_data['B']], axis=2)
+    elif len(channel_data) == 1:
+        image = list(channel_data.values())[0]
+    else:
+        # Read first available channel
+        first_channel = list(channels)[0]
+        channel_str = exr_file.channel(first_channel, pixel_type)
+        image = np.frombuffer(channel_str, dtype=np.float32).reshape((height, width))
+    
+    return image, header
 
-def convert_path(examples):
-    c_examples = []
-    # Fixed: 'in len()' causes a TypeError, changed to 'in range(len())'
-    for i in range(len(examples)):
-        c_lis = []
-        # Fixed: 'in len()' changed to 'in range(len())'
-        for j in range(len(examples[i])):
-            
-            # Check if the element is a tuple (contains specific model name)
-            if isinstance(examples[i][j], tuple):
-                model_name, path = examples[i][j][1], examples[i][j][0]
+def Lin_to_Log(im,max_val=128):
+    im = np.clip(im,max=max_val)
+    im = np.log(2.2*im + 1.0)/np.log(2.2*max_val + 1.0)
+    return np.power(im,1.0/2.2)
+
+def Lin_to_sRGB(im):
+    """Convert linear to sRGB."""
+    linear_part = 12.92 * im
+    gamma_part = im ** (1.0 / 2.4) * 1.055 - 0.055
+    return np.where(im <= 0.0031308, linear_part, gamma_part)
+
+
+def save_video_jordan(output_path, video, fps, quality=None, imageio_params=None, save_individual = False):
+    """
+    Args:
+        video: F x H x W x 3, in np.uint8 (so 0-255)
+    
+    Jordan:
+    
+    My function for saving mp4 and gifs (depending on the output name you give it, it will automatically figure out if it needs to save a gif or an mp4):
+First, install imageio with pip install "imageio[ffmpeg]", then ffmpeg is important because otherwise it will not support GIF saving
+    
+    Paul (https://www.reddit.com/r/photoshop/comments/h8uiq3/cant_seem_to_get_accurate_30_fps_in_photoshop/):
+    
+    GIF files that contain animation do not store a "framerate". Instead it stores, per frame, a "frame duration". And that frame duration is stored as an integer (n) that defines n/100ths of a second. So you can specify a frame duration of 1/100 sec, 2/100 sec, 3/100 sec, 4/100 sec, etc. but not something like 3.3333.../100 sec. (30 fps).
+    you can not get 60 fps. But you can get 25 and 50 fps.
+    """
+    
+    imageio_params = imageio_params if imageio_params is not None else {}
+    if quality is not None:  # Quality is 1-10, generally for MP4 I do 7 or above, unsure how quality affects GIFs
+        imageio_params["quality"] = quality
+    if os.path.splitext(output_path)[1] == ".gif":  # Makes sure the gif will loop when it ends
+        imageio_params["loop"] = 0
+
+    if True:
+        writer = imageio.get_writer(output_path, fps=fps, **imageio_params)
+        for i in range(len(video)):
+            writer.append_data(np.array(video[i]))
+        writer.close()
+
+def read_video_from_path(path):
+    cap = cv2.VideoCapture(path)
+    if not cap.isOpened():
+        print("Error opening video file")
+    else:
+        frames = []
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret == True:
+                frames.append(np.array(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
             else:
-                model_name = "wan22_720P"
-                # Fixed: examples[i][j] is the string itself. [0] would only get the first letter.
-                path = examples[i][j] 
-            
-            # Extract the first directory (e.g., stylized_mesh_zhizheng_stylized)
-            dataset_path = path.split('/')[0]
-            
-            # Extract filename and drop .mp4 (e.g., dancing_1_0)
-            sample_name = path.split('/')[1].replace('.mp4', '')
-            dataset_path = os.path.join("/root/hf_repo/webpage/eval_data/eval_data/", dataset_path)
-            c_lis.append((dataset_path, model_name, sample_name))
-        c_examples.append(c_lis)
-    return c_examples
+                break
+        cap.release()
+    return np.stack(frames)
 
-good_examples = convert_path(good_example)
-########################################################################################
-
-# Visualizer borrowed from reference code
-try:
-    from moviepy.editor import ImageSequenceClip
-except ImportError:
-    from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 class Visualizer:
     def __init__(
         self,
         save_dir: str = "./results",
+        grayscale: bool = False,
         pad_value: int = 0,
         fps: int = 10,
-        mode: str = "rainbow",
+        mode: str = "rainbow",  # 'cool', 'optical_flow'
         linewidth: int = 1,
-        tracks_leave_trace: int = 0,
+        show_first_frame: int = 10,
+        tracks_leave_trace: int = 0,  # -1 for infinite
     ):
         self.mode = mode
         self.save_dir = save_dir
+        self.vtxt_path = os.path.join(save_dir, "videos.txt")
+        self.ttxt_path = os.path.join(save_dir, "trackings.txt")
         if mode == "rainbow":
             self.color_map = cm.get_cmap("gist_rainbow")
         elif mode == "cool":
             self.color_map = cm.get_cmap(mode)
-            
+        self.show_first_frame = show_first_frame
+        self.grayscale = grayscale
         self.tracks_leave_trace = tracks_leave_trace
         self.pad_value = pad_value
         self.linewidth = linewidth
         self.fps = fps
 
-    def visualize(self, video: np.ndarray, tracks: np.ndarray, visibility: np.ndarray = None, filename: str = "video", save_video: bool = True):
-        if self.pad_value > 0:
-            pad_width = ((0,0), (self.pad_value, self.pad_value), (self.pad_value, self.pad_value), (0,0))
-            video = np.pad(video, pad_width, mode='constant', constant_values=255)
-            tracks = tracks + self.pad_value
+    def visualize(
+        self,
+        video: torch.Tensor,  # (B,T,C,H,W)
+        tracks: torch.Tensor,  # (B,T,N,2)
+        visibility: torch.Tensor = None,  # (B, T, N, 1) bool
+        gt_tracks: torch.Tensor = None,  # (B,T,N,2)
+        segm_mask: torch.Tensor = None,  # (B,1,H,W)
+        filename: str = "video",
+        writer=None,  # tensorboard Summary Writer, used for visualization during training
+        step: int = 0,
+        query_frame: int = 0,
+        save_video: bool = True,
+        compensate_for_camera_motion: bool = False,
+        rigid_part = None,
+        video_depth = None # (B,T,C,H,W)
+    ):
+        if compensate_for_camera_motion:
+            assert segm_mask is not None
+        if segm_mask is not None:
+            coords = tracks[0, query_frame].round().long()
+            segm_mask = segm_mask[0, query_frame][coords[:, 1], coords[:, 0]].long()
 
-        tracking_video = self.draw_tracks_on_video(video=video, tracks=tracks, visibility=visibility, filename=filename)
+        video = F.pad(
+            video,
+            (self.pad_value, self.pad_value, self.pad_value, self.pad_value),
+            "constant",
+            255,
+        )
+
+        if video_depth is not None:
+            video_depth = (video_depth*255).cpu().numpy().astype(np.uint8)
+            video_depth = ([cv2.applyColorMap(video_depth[0,i,0], cv2.COLORMAP_INFERNO) 
+                            for i in range(video_depth.shape[1])])
+            video_depth = np.stack(video_depth, axis=0)
+            video_depth = torch.from_numpy(video_depth).permute(0, 3, 1, 2)[None]
+
+        tracks = tracks + self.pad_value
+
+        if self.grayscale:
+            transform = transforms.Grayscale()
+            video = transform(video)
+            video = video.repeat(1, 1, 3, 1, 1)
+
+        tracking_video = self.draw_tracks_on_video(
+            video=video,
+            tracks=tracks,
+            visibility=visibility,
+            segm_mask=segm_mask,
+            gt_tracks=gt_tracks,
+            query_frame=query_frame,
+            compensate_for_camera_motion=compensate_for_camera_motion,
+            rigid_part=rigid_part
+        )
 
         if save_video:
-            self.save_video_clip(tracking_video, filename=filename, savedir=self.save_dir)
+            # import ipdb; ipdb.set_trace()
+            tracking_dir = os.path.join(self.save_dir, "tracking")
+            if not os.path.exists(tracking_dir):
+                os.makedirs(tracking_dir)
+            self.save_video(tracking_video, filename=filename+"_tracking", 
+                            savedir=tracking_dir, writer=writer, step=step)
+            # with open(self.ttxt_path, 'a') as file:
+            #     file.write(f"tracking/{filename}_tracking.mp4\n")
+
+            videos_dir = os.path.join(self.save_dir, "videos")
+            if not os.path.exists(videos_dir):
+                os.makedirs(videos_dir)
+            self.save_video(video, filename=filename, 
+                            savedir=videos_dir, writer=writer, step=step)
             
         return tracking_video
 
-    def save_video_clip(self, video, filename, savedir=None):
-        if savedir is None:
-            save_path = os.path.join(self.save_dir, f"{filename}.mp4")
+    def save_video(self, video, filename, savedir=None, writer=None, step=0):
+        if writer is not None:
+            writer.add_video(
+                f"{filename}",
+                video.to(torch.uint8),
+                global_step=step,
+                fps=self.fps,
+            )
         else:
-            save_path = os.path.join(savedir, f"{filename}.mp4")
-            
-        if isinstance(video, np.ndarray):
-            video_list = list(video)
-        else:
-            video_list = video
+            os.makedirs(self.save_dir, exist_ok=True)
+            wide_list = list(video.unbind(1))
+            wide_list = [wide[0].permute(1, 2, 0).cpu().numpy() for wide in wide_list]
+            # clip = ImageSequenceClip(wide_list[2:-1], fps=self.fps)
+            clip = ImageSequenceClip(wide_list, fps=self.fps)
 
-        try:
-            clip = ImageSequenceClip(video_list, fps=self.fps)
-            clip.write_videofile(save_path, codec="libx264", fps=self.fps, logger=None)
-        except Exception:
-            from moviepy.video.io.ImageSequenceClip import ImageSequenceClip as ISC
-            clip = ISC(video_list, fps=self.fps)
+            # Write the video file
+            if savedir is None:
+                save_path = os.path.join(self.save_dir, f"{filename}.mp4")
+            else:
+                save_path = os.path.join(savedir, f"{filename}.mp4")
             clip.write_videofile(save_path, codec="libx264", fps=self.fps, logger=None)
 
-    def draw_tracks_on_video(self, video, tracks, visibility=None, filename=""):
-        T, H, W, C = video.shape
-        _, N, D = tracks.shape
+            print(f"Video saved to {save_path}")
+
+    def draw_tracks_on_video(
+        self,
+        video: torch.Tensor,
+        tracks: torch.Tensor,
+        visibility: torch.Tensor = None,
+        segm_mask: torch.Tensor = None,
+        gt_tracks=None,
+        query_frame: int = 0,
+        compensate_for_camera_motion=False,
+        rigid_part=None,
+    ):
+        B, T, C, H, W = video.shape
+        _, _, N, D = tracks.shape
+
+        assert D == 3
+        assert C == 3
+        video = video[0].permute(0, 2, 3, 1).byte().detach().cpu().numpy()  # S, H, W, C
+        tracks = tracks[0].detach().cpu().numpy()  # S, N, 2
+        if gt_tracks is not None:
+            gt_tracks = gt_tracks[0].detach().cpu().numpy()
+
+        res_video = []
+
+        # process input video
+        for rgb in video:
+             res_video.append(rgb.copy())
         
-        res_video = [frame.copy().astype(np.uint8) for frame in video]
+        ## create a blank tensor with the same shape as the video
+        #for rgb in video:
+        #    black_frame = np.zeros_like(rgb.copy(), dtype=rgb.dtype)
+        #    res_video.append(black_frame)
+
         vector_colors = np.zeros((T, N, 3))
 
-        if self.mode == "rainbow":
-            x_min, x_max = 1e9, -1e9
-            y_min, y_max = 1e9, -1e9
-            
-            for num_tracks in range(N):
-                if visibility is not None:
-                    vis_col = visibility[:, num_tracks, 0]
-                    if np.any(vis_col != 0):
-                        f = np.argmax(vis_col != 0)
-                    else:
-                        f = 0
-                else:
-                    f = 0
-                
-                x_min = min(tracks[f, num_tracks, 0], x_min)
-                x_max = max(tracks[f, num_tracks, 0], x_max)
-                y_min = min(tracks[f, num_tracks, 1], y_min)
-                y_max = max(tracks[f, num_tracks, 1], y_max)
+        if self.mode == "optical_flow":
 
-            safe_depth = tracks[0, :, 2].copy()
-            safe_depth[safe_depth == 0] = 1.0 
-            z_inv = 1.0 / safe_depth
-            z_min, z_max = np.percentile(z_inv, [2, 98])
-            
-            norm_x = plt.Normalize(x_min, x_max)
-            norm_y = plt.Normalize(y_min, y_max)
-            norm_z = plt.Normalize(z_min, z_max)
+            vector_colors = flow_vis.flow_to_color(tracks - tracks[query_frame][None])
 
-            for n in range(N):
-                if visibility is not None:
-                    if np.any(visibility[:, n, 0] != 0):
-                        f = np.argmax(visibility[:, n, 0] != 0)
-                    else:
-                        f = 0
-                else:
-                    f = 0
-                
-                r = norm_x(tracks[f, n, 0])
-                g = norm_y(tracks[f, n, 1])
-                d_val = tracks[0, n, 2] if tracks[0, n, 2] != 0 else 1.0
-                b = norm_z(1.0 / d_val)
-                
-                color = np.array([r, g, b])[None] * 255
-                vector_colors[:, n] = np.repeat(color, T, axis=0)
+        elif segm_mask is None:
+            if self.mode == "rainbow":
+                x_min, x_max = tracks[0, :, 0].min(), tracks[0, :, 0].max()
+                y_min, y_max = tracks[0, :, 1].min(), tracks[0, :, 1].max()
 
-        for t in tqdm(range(T), desc=f"Drawing tracks {filename}", leave=False):
+                if True:
+                    x_min = 1111111111
+                    x_max = -11111111111
+                    y_min = 1111111111
+                    y_max = -11111111111
+                    """
+                    visibility torch.Size([1, 49, 15000, 1])
+                    f tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0])
+                    tracks (49, 15000, 3)
+                    """
+                    for num_tracks in range(tracks.shape[2]):
+                        f = (visibility[0, :, num_tracks,0] !=0).to(torch.float32).argmax(dim=0)
+                        print("visibility2", visibility.shape)
+                        print("f", f)
+                        print("tracks", tracks.shape)
+                        #f = -1
+                        x_min = min(tracks[f, num_tracks, 0], x_min)
+                        x_max = max(tracks[f, num_tracks, 0], x_max)
+                        y_min = min(tracks[f, num_tracks, 1], y_min)
+                        y_max = max(tracks[f, num_tracks, 1], y_max)
+
+                z_inv = 1/tracks[0, :, 2]
+                z_min, z_max = np.percentile(z_inv, [2, 98])
+                
+                norm_x = plt.Normalize(x_min, x_max)
+                norm_y = plt.Normalize(y_min, y_max)
+                norm_z = plt.Normalize(z_min, z_max)
+
+                for n in range(N):
+                    f = (visibility[0, :, n, 0] != 0).to(torch.float32).argmax(dim=0)
+                    #f = 0
+                    r = norm_x(tracks[f, n, 0])
+                    g = norm_y(tracks[f, n, 1])
+                    # r = 0
+                    # g = 0
+                    b = norm_z(1/tracks[0, n, 2])
+                    color = np.array([r, g, b])[None] * 255
+                    vector_colors[:, n] = np.repeat(color, T, axis=0)
+            else:
+                # color changes with time
+                for t in range(T):
+                    color = np.array(self.color_map(t / T)[:3])[None] * 255
+                    vector_colors[t] = np.repeat(color, N, axis=0)
+        else:
+            if self.mode == "rainbow":
+                vector_colors[:, segm_mask <= 0, :] = 255
+
+                x_min, x_max = tracks[0, :, 0].min(), tracks[0, :, 0].max()
+                y_min, y_max = tracks[0, :, 1].min(), tracks[0, :, 1].max()
+                z_min, z_max = tracks[0, :, 2].min(), tracks[0, :, 2].max()
+
+                norm_x = plt.Normalize(x_min, x_max)
+                norm_y = plt.Normalize(y_min, y_max)
+                norm_z = plt.Normalize(z_min, z_max)
+
+                for n in range(N):
+                    r = norm_x(tracks[0, n, 0])
+                    g = norm_y(tracks[0, n, 1])
+                    b = norm_z(tracks[0, n, 2])
+                    color = np.array([r, g, b])[None] * 255
+                    vector_colors[:, n] = np.repeat(color, T, axis=0)
+
+            else:
+                # color changes with segm class
+                segm_mask = segm_mask.cpu()
+                color = np.zeros((segm_mask.shape[0], 3), dtype=np.float32)
+                color[segm_mask > 0] = np.array(self.color_map(1.0)[:3]) * 255.0
+                color[segm_mask <= 0] = np.array(self.color_map(0.0)[:3]) * 255.0
+                vector_colors = np.repeat(color[None], T, axis=0)
+
+        # Draw tracks
+        if self.tracks_leave_trace != 0:
+            for t in range(1, T):
+                first_ind = (
+                    max(0, t - self.tracks_leave_trace)
+                    if self.tracks_leave_trace >= 0
+                    else 0
+                )
+                curr_tracks = tracks[first_ind : t + 1]
+                curr_colors = vector_colors[first_ind : t + 1]
+                if compensate_for_camera_motion:
+                    diff = (
+                        tracks[first_ind : t + 1, segm_mask <= 0]
+                        - tracks[t : t + 1, segm_mask <= 0]
+                    ).mean(1)[:, None]
+
+                    curr_tracks = curr_tracks - diff
+                    curr_tracks = curr_tracks[:, segm_mask > 0]
+                    curr_colors = curr_colors[:, segm_mask > 0]
+
+                res_video[t] = self._draw_pred_tracks(
+                    res_video[t],
+                    curr_tracks,
+                    curr_colors,
+                )
+                if gt_tracks is not None:
+                    res_video[t] = self._draw_gt_tracks(
+                        res_video[t], gt_tracks[first_ind : t + 1]
+                    )
+
+        if rigid_part is not None:
+            cls_label = torch.unique(rigid_part)
+            cls_num = len(torch.unique(rigid_part))
+            # visualize the clustering results 
+            cmap = plt.get_cmap('jet')  # get the color mapping
+            colors = cmap(np.linspace(0, 1, cls_num))  
+            colors = (colors[:, :3] * 255) 
+            color_map = {lable.item(): color for lable, color in zip(cls_label, colors)}
+
+        # Draw points
+        for t in tqdm(range(T)):
+            # Create a list to store information for each point
             points_info = []
             for i in range(N):
                 coord = (tracks[t, i, 0], tracks[t, i, 1])
-                depth = tracks[t, i, 2]
-                is_visible = True
+                depth = tracks[t, i, 2]  # assume the third dimension is depth
+                visibile = True
                 if visibility is not None:
-                    is_visible = visibility[t, i, 0] > 0
-                
+                    visibile = visibility[0, t, i]
                 if coord[0] != 0 and coord[1] != 0:
-                      points_info.append((i, coord, depth, is_visible))
+                    if not compensate_for_camera_motion or (
+                        compensate_for_camera_motion and segm_mask[i] > 0
+                    ):
+                        points_info.append((i, coord, depth, visibile))
             
+            # Sort points by depth, points with smaller depth (closer) will be drawn later
             points_info.sort(key=lambda x: x[2], reverse=True)
             
-            for i, coord, _, is_visible in points_info:
-                if is_visible:
-                    cv2.circle(res_video[t], (int(coord[0]), int(coord[1])), int(self.linewidth * 2), vector_colors[t, i].tolist(), thickness=-1)
+            for i, coord, _, visibile in points_info:
+                if rigid_part is not None:
+                    color = color_map[rigid_part.squeeze()[i].item()]
+                    cv2.circle(
+                        res_video[t],
+                        coord,
+                        int(self.linewidth * 2),
+                        color.tolist(),
+                        thickness=-1 if visibile else 2
+                        -1,
+                    )
+                else:
+                    # Determine rectangle width based on the distance between adjacent tracks in the first frame
+                    if t == 0:
+                        distances = np.linalg.norm(tracks[0] - tracks[0, i], axis=1)
+                        distances = distances[distances > 0]
+                        rect_size = int(np.min(distances))/2
+                    
+                    # Define coordinates for top-left and bottom-right corners of the rectangle
+                    top_left = (int(coord[0] - rect_size), int(coord[1] - rect_size/1.5)) # Rectangle width is 1.5x (video aspect ratio is 1.5:1)
+                    bottom_right = (int(coord[0] + rect_size), int(coord[1] + rect_size/1.5))
 
-        return np.stack(res_video)
+                    # Draw rectangle
+                    if visibile:
+                        print("center", coord)
+                        cv2.circle(
+                            res_video[t],
+                            (int(coord[0]), int(coord[1])),
+                            int(self.linewidth * 2),
+                            vector_colors[t, i].tolist(),
+                            thickness=-1 if visibile else 0
+                            -1,
+                        )
 
-def get_white_video(output_path, width=832, height=480, duration=1.0, fps=15):
-    """Generates a white video to be used as padding."""
-    if os.path.exists(output_path):
-        return output_path
-    
-    try:
-        clip = ColorClip(size=(width, height), color=(255, 255, 255), duration=duration)
-        clip.write_videofile(output_path, codec="libx264", fps=fps, audio=False, logger=None)
-        return output_path
-    except Exception as e:
-        print(f"Failed to create white video: {e}")
-        return None
+        # Construct the final rgb sequence
+        return torch.from_numpy(np.stack(res_video)).permute(0, 3, 1, 2)[None].byte()
 
-def get_video_properties(video_path):
-    """Extracts FPS, Width, Height, Duration from a video file."""
-    try:
-        cap = cv2.VideoCapture(video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        duration = frame_count / fps if fps > 0 else 2.0
-        cap.release()
-        return fps, w, h, duration
-    except:
-        return None
+    def _draw_pred_tracks(
+        self,
+        rgb: np.ndarray,  # H x W x 3
+        tracks: np.ndarray,  # T x 2
+        vector_colors: np.ndarray,
+        alpha: float = 0.5,
+    ):
+        T, N, _ = tracks.shape
 
-def process_track_data(track_path, target_h, target_w):
+        for s in range(T - 1):
+            vector_color = vector_colors[s]
+            original = rgb.copy()
+            alpha = (s / T) ** 2
+            for i in range(N):
+                coord_y = (int(tracks[s, i, 0]), int(tracks[s, i, 1]))
+                coord_x = (int(tracks[s + 1, i, 0]), int(tracks[s + 1, i, 1]))
+                if coord_y[0] != 0 and coord_y[1] != 0:
+                    cv2.line(
+                        rgb,
+                        coord_y,
+                        coord_x,
+                        vector_color[i].tolist(),
+                        self.linewidth,
+                        cv2.LINE_AA,
+                    )
+            if self.tracks_leave_trace > 0:
+                rgb = cv2.addWeighted(rgb, alpha, original, 1 - alpha, 0)
+        return rgb
+
+    def _draw_gt_tracks(
+        self,
+        rgb: np.ndarray,  # H x W x 3,
+        gt_tracks: np.ndarray,  # T x 2
+    ):
+        T, N, _ = gt_tracks.shape
+        color = np.array((211.0, 0.0, 0.0))
+
+        for t in range(T):
+            for i in range(N):
+                gt_tracks = gt_tracks[t][i]
+                #  draw a red cross
+                if gt_tracks[0] > 0 and gt_tracks[1] > 0:
+                    length = self.linewidth * 3
+                    coord_y = (int(gt_tracks[0]) + length, int(gt_tracks[1]) + length)
+                    coord_x = (int(gt_tracks[0]) - length, int(gt_tracks[1]) - length)
+                    cv2.line(
+                        rgb,
+                        coord_y,
+                        coord_x,
+                        color,
+                        self.linewidth,
+                        cv2.LINE_AA,
+                    )
+                    coord_y = (int(gt_tracks[0]) - length, int(gt_tracks[1]) + length)
+                    coord_x = (int(gt_tracks[0]) + length, int(gt_tracks[1]) - length)
+                    cv2.line(
+                        rgb,
+                        coord_y,
+                        coord_x,
+                        color,
+                        self.linewidth,
+                        cv2.LINE_AA,
+                    )
+        return rgb
+
+
+
+for i in range(len(good_examples)):
+    good_examples[i] = os.path.join(model_path, good_examples[i].replace(".gif", ".mp4"))
+
+def get_gt_video(path):
+    lis = path.split("/")
+    model_name = lis[-2]
+    video_name = lis[-1]
+    path = os.path.join("/".join(lis[:-2]), "log/", video_name.split(".mp4")[0], "video.mp4")
+    return path
+
+def get_naive_video(path):
     """
-    Loads track data and scales it to match target_h and target_w.
+    Get naively generated videos
     """
-    if not os.path.exists(track_path):
-        raise FileNotFoundError(f"Track file not found: {track_path}")
+    lis = path.split("/")
+    model_name = lis[-2]
+    video_name = lis[-1]
+    if "Original" in path:
+        path = os.path.join("/".join(lis[:-2]), "log/", video_name.split(".mp4")[0], "video.mp4")
+        return path
+    
+    #enumerate reference images
+    path_folder = None
+    mode = "albedo"
+    video_path = None
 
-    track_data = np.load(track_path, allow_pickle=True).item()
-    tr = track_data["uvz"]
-    if tr.ndim == 4: tr = tr[0]
+    tmp_file = "./../tmp_webpage/tmp_jul/" + mode + "_" + video_name
+    os.makedirs(tmp_file, exist_ok = True)
+    tmp_file = os.path.join(tmp_file, "video.mp4")
+    if os.path.exists(tmp_file):
+        return tmp_file
     
-    vis_mask = track_data["vis"]
-    if vis_mask.ndim == 4: vis_mask = vis_mask[0]
-    vis_mask_bool = vis_mask.astype(bool)
-    if vis_mask_bool.shape[-1] == 1: vis_mask_bool = vis_mask_bool[..., 0]
+    if "albedo" in path:
+        video_name = "_".join(video_name.split("_")[:4])
+        path_folder = os.path.join("/fsx_scanline/from_eyeline/users/jphilip/test_delighting/koichi_cvpr26/", video_name, "output")
+        video_path = os.path.join("/fsx_scanline/from_eyeline/users/jphilip/test_delighting/koichi_cvpr26/", video_name + ".mp4")
+        mode = "albedo"
+        #lighting_r_1_frame_00341.exr
+        #olats_albedo_frame_00078.exr
     
-    orig_H = track_data.get("H", 480)
-    orig_W = track_data.get("W", 832)
-    
-    scale_x = target_w / orig_W
-    scale_y = target_h / orig_H
-    
-    scaled_tr = tr.copy()
-    scaled_tr[..., 0] *= scale_x
-    scaled_tr[..., 1] *= scale_y
-    
-    on_screen = (scaled_tr[..., 0] >= 0) & (scaled_tr[..., 1] >= 0) & \
-                (scaled_tr[..., 0] < target_w) & (scaled_tr[..., 1] < target_h)
-    
-    final_vis = (vis_mask_bool & on_screen)[..., None]
-    
-    return scaled_tr, final_vis
+    if "lighting" in path:
+        video_name = "_".join(video_name.split("_")[:4])
+        path_folder = os.path.join("/fsx_scanline/from_eyeline/users/jphilip/test_delighting/koichi_cvpr26/", video_name, "output")
+        video_path = os.path.join("/fsx_scanline/from_eyeline/users/jphilip/test_delighting/koichi_cvpr26/", video_name + ".mp4")
+        mode = "lighting"
+        #lighting_r_1_frame_00341.exr
+        #olats_albedo_frame_00078.exr
 
-def generate_ref_clip(ref_dir, read_name, save_name, type, width, height, fps, duration, tmp_dir):
-    """
-    Helper to generate reference clips.
-    """
-    clip_path = os.path.join(tmp_dir, f"{save_name}_{type}.mp4")
+    #determine video
+    vr = VideoReader(video_path, ctx=cpu(0), width = 832, height = 480) 
+    stride = 3
+    while stride * (49 - 1) >= len(vr):
+        stride = stride  - 1
+    assert(stride >= 1)
+    idx = np.arange(0, stride*(49-1) + 1, stride)
     
-    if os.path.exists(clip_path):
-        return clip_path
+    #enumerate reference images
+    tmp = os.listdir(path_folder)
+    ref_path = []
+    for tt in tmp:
+        if mode in tt:
+            ref_path.append(os.path.join(path_folder, tt))
+    ref_path.sort()
+
+    #load reference images
+    frames = []
+    for i in idx:
+        image, header = read_exr(ref_path[i])
+        image = image/(1+image) # simple tonemapping
+        # another possible solution: image = Lin_to_Log(image), image = np.clip(image,0,1)
+        image = Lin_to_sRGB(image)
+        print("Converted image to sRGB color space.")
+        image = (image * 255).astype(np.uint8)
+        image = cv2.resize(image, (832, 480))
+        frames.append(image)
+    frames = np.array(frames)
+    
+    save_video_jordan(tmp_file, frames, fps = 15, quality=9)
+
+    return tmp_file
+    
+def get_vis_video(path):
+    path = os.path.join("/root/", path)
+    tmp_folder = "/tmp_webpage/tmp_vis/" + ((path.split("/")[-1]).split(".mp4")[0]) + "_720"
+    os.makedirs(tmp_folder, exist_ok = True)
+    if os.path.exists(os.path.join(tmp_folder, "tracking/overlay_tracking.mp4")):
+        return os.path.join(tmp_folder, "tracking/overlay_tracking.mp4")
+    
+    #get track visualization
+    lis = path.split("/")
+    model_name = lis[-2]
+    video_name = lis[-1]
+    path = os.path.join("/".join(lis[:-2]), "log/", video_name.split(".mp4")[0], "track.npy")
+
+    track = np.load(path, allow_pickle = True).item()
+    frames = np.zeros((49, track["H"], track["W"], 3))
+    vis = Visualizer(
+        save_dir=tmp_folder,
+        linewidth=2,
+        mode="rainbow",
+        fps=15,
+        tracks_leave_trace=0, #10,   # <= infinite trace
+    )
+
+    tr = track["uvz"][None]
+    tr = tr[:, :49]
+    track["vis"] = track["vis"][None] #(B, T, N, 1)
+    track["vis"] = (track["vis"].astype(np.bool_) & (tr[..., 0] >= 0) & (tr[..., 1] >= 0) & (tr[..., 0] < track["W"]) & (tr[..., 1] < track["H"]))
+
+    num_tracks = track["vis"].shape[2]
+    
+    if False and num_tracks > 250:
+        ids = np.random.choice(num_tracks, 250)
+        track["vis"] = track["vis"][:, :, ids]
+        tr = tr[:, :, ids]
+    
+    vis.visualize(
+        video=torch.from_numpy(frames).permute(0,3,1,2)[None],
+        tracks=torch.from_numpy(tr),
+        visibility = torch.from_numpy(track["vis"][..., None]),
+        filename="overlay",
+        save_video=True,
+    )
+    
+    return os.path.join(tmp_folder, "tracking/overlay_tracking.mp4")
+
+def get_ref_imgs(path):
+    lis = path.split("/")
+    model_name = lis[-2]
+    video_name = lis[-1]
+    ref_folder = os.path.join("/".join(lis[:-2]), "log/", video_name.split(".mp4")[0], "ref")
+    ref_lis = os.listdir(ref_folder)
+    ref_lis.sort()
+    path_list = []
+    idx_list = []
+    
+    tmp_folder = "./../tmp_webpage/tmp_julien/" + (video_name.split(".mp4"))[0] + "_ref"
+    os.makedirs(tmp_folder, exist_ok = True)
+    
+    for r in ref_lis:
+        if not r.endswith(".png"):
+            continue
+        fr = Image.open(os.path.join(ref_folder, r)).resize((832, 480))
+        frames = [fr] * 49
+        frames = np.array(frames)
+        ref_idx = r.split(".png")[0]        
+        tmp_file = os.path.join(tmp_folder, ref_idx + ".png")
+        save_video_jordan(tmp_file, frames, fps = 15, quality=9)
+        idx_list.append(int(ref_idx))
+        path_list.append(tmp_file)
         
-    img_path = os.path.join(ref_dir, f"{read_name}.png")
-    npy_path = os.path.join(ref_dir, f"{read_name}.npy")
+    return path_list, idx_list
+
+#classify by video type
+dic = {}
+for g in good_examples:
+    g = g.split("/")
+    #vid_name = ((g[-1].split(".mp4"))[0]).replace("_Ref2", "").replace("_Ref1", "")
+    #if vid_name not in dic:
+    #    dic[vid_name] = []
+    #dic[vid_name].append("/".join(g))
+    dic[(g[-1].split(".mp4"))[0]] = []
+    dic[(g[-1].split(".mp4"))[0]].append("/".join(g))
+
+print("dic", dic)
+
+#Iterate through each video
+for video_name in dic:
+    examples = dic[video_name]
+
+    if "Original" in video_name:
+        continue
     
-    if not os.path.exists(img_path):
-        return None
-        
-    if not os.path.exists(npy_path):
-        pass
+    #Retrieve ground truth video
+    gt_path = get_gt_video(examples[0])
+    print("gt", gt_path)
+    
+    #Retrieve naive video
+    naive_path = get_naive_video(examples[0])
 
-    try:
-        if type == "img":
-            img = cv2.imread(img_path)
-            if img is None: return None
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = cv2.resize(img, (width, height))
-            num_frames = int(duration * fps)
-            frames = np.array([img] * num_frames, dtype=np.uint8)
-            vis = Visualizer(save_dir=tmp_dir, fps=int(fps))
-            vis.save_video_clip(frames, filename=f"{save_name}_{type}")
-            
-        elif type == "trk":
-            if not os.path.exists(npy_path): return None
-            tr, final_vis = process_track_data(npy_path, height, width)
-            frames = np.zeros((len(tr), height, width, 3), dtype=np.uint8)
-            vis = Visualizer(save_dir=tmp_dir, pad_value=0, linewidth=2, mode="rainbow", fps=int(fps))
-            vis.visualize(video=frames, tracks=tr, visibility=final_vis, filename=f"{save_name}_{type}", save_video=True)
-            
-        return clip_path
-    except Exception as e:
-        print(f"Failed to generate ref {type} for {save_name}: {e}")
-        return None
-
-def visualize_mesh(example, output_path):
+    #Retrieve visualization of motion tracks (color gradetion)
+    vis_path = get_vis_video(examples[0])
+    
+    #Stack together (GT, motion tracks, stylized videos)
     """
-    3x3 Grid Layout (Labels Cleaned):
-    Source Video | Video Track | First Frame
-    Tora         | Diffusion as Shader | Go-With-The-Flow
-    ATI          | Wan-Move            | Ours
+    Original /  temporal inconsistent video  / ours
+    Motiontrack / reference images
     """
-    if not example or len(example) == 0:
-        return None
+    inputs = {
+        "Source video": gt_path,
+        "Intrinsic Diffusion (per frame)": naive_path,
+    }
+    for idx, e in enumerate(examples):
+        name = "Ours"
+        inputs[name] = e
+    inputs["Track conditions"] = vis_path
 
-    # --- Step 1: Base Info ---
-    first_item = example[0]
-    base_path, model_name, sample_name = first_item
-    
-    log_dir_common = os.path.join(base_path, "log", sample_name)
-    source_video_path = os.path.join(log_dir_common, "video.mp4")
-    
-    gen_video_path_ours = os.path.join(base_path, model_name, f"{sample_name}.mp4")
-    
-    props = None
-    if os.path.exists(gen_video_path_ours):
-        props = get_video_properties(gen_video_path_ours)
-    if not props and os.path.exists(source_video_path):
-        props = get_video_properties(source_video_path)
-    
-    if props:
-        fps, w, h, duration = props
-    else:
-        fps, w, h, duration = 15, 832, 480, 3.0
-    
-    if w % 2 != 0: w -= 1
-    if h % 2 != 0: h -= 1
-
-    tmp_dir = "/tmp_visuals_baseline"
-    os.makedirs(tmp_dir, exist_ok=True)
-    
-    white_video_path = os.path.join(tmp_dir, "white_spacer.mp4")
-    get_white_video(white_video_path, width=w, height=h, duration=duration, fps=fps)
-
-    # --- Step 2: Prepare Common Elements ---
-    
-    track_path = os.path.join(log_dir_common, "track.npy")
-    main_trk_name = f"{sample_name}_main_trk"
-    main_trk_path = os.path.join(tmp_dir, f"{main_trk_name}.mp4")
-    
-    if not os.path.exists(main_trk_path):
-        try:
-            if os.path.exists(track_path):
-                tr, final_vis = process_track_data(track_path, h, w)
-                frames = np.zeros((len(tr), h, w, 3), dtype=np.uint8)
-                vis = Visualizer(save_dir=tmp_dir, pad_value=0, linewidth=2, mode="rainbow", fps=int(fps))
-                vis.visualize(video=frames, tracks=tr, visibility=final_vis, filename=main_trk_name, save_video=True)
-            else:
-                get_white_video(main_trk_path, w, h, duration, fps)
-        except:
-            get_white_video(main_trk_path, w, h, duration, fps)
-
-    ref_dir = os.path.join(log_dir_common, "ref")
-    ref_0_name = f"{sample_name}_ref_0_img"
-    ref_0_path = generate_ref_clip(ref_dir, "0", ref_0_name, "img", w, h, fps, duration, tmp_dir)
-    if not ref_0_path:
-        ref_0_path = white_video_path
-
-    # --- Step 3: Prepare Baseline Videos ---
-    baseline_video_paths = {}
-    
-    for i, bl_key in enumerate(baselines):
-        bl_path = os.path.join(base_path, bl_key, f"{sample_name}.mp4")
-        
-        if os.path.exists(bl_path):
-            baseline_video_paths[model_names[i]] = bl_path
+    #attach reference frames
+    path_list, idx_list = get_ref_imgs(examples[0])
+    for idx, p in enumerate(path_list):
+        if idx_list[idx] == 0:
+            inputs["First frame"] = p
+        elif idx_list[idx] == 48:
+            inputs["Last frame"] = p
         else:
-            baseline_video_paths[model_names[i]] = white_video_path
+            raise NotImplementedError
+    
+    print("inputs:", inputs)
+    
+    #Stack videos
+    output_video_path = os.path.join("./videos/Temporal Stabilization", video_name + ".mp4")
+    os.makedirs("./videos/Temporal Stabilization",  exist_ok = True)
+    stack_videos.stack_videos(inputs, output_video_path, cols=4)
+    print("saved:", output_video_path)
 
-    # --- Step 4: Build 3x3 Grid ---
-    # Using list of tuples to maintain order and clean labels
-    grid_list = []
-
-    # Row 1
-    src_p = source_video_path if os.path.exists(source_video_path) else white_video_path
-    grid_list.append(("Source Video", src_p))
-    grid_list.append(("Video Track", main_trk_path))
-    grid_list.append(("First Frame", ref_0_path))
-
-    # Row 2
-    grid_list.append(("Tora", baseline_video_paths.get("Tora", white_video_path)))
-    grid_list.append(("Diffusion as Shader", baseline_video_paths.get("Diffusion as Shader", white_video_path)))
-    grid_list.append(("Go-With-The-Flow", baseline_video_paths.get("Go-With-The-Flow", white_video_path)))
-
-    # Row 3
-    grid_list.append(("ATI", baseline_video_paths.get("ATI", white_video_path)))
-    grid_list.append(("Wan-Move", baseline_video_paths.get("Wan-Move", white_video_path)))
-    ours_p = gen_video_path_ours if os.path.exists(gen_video_path_ours) else white_video_path
-    grid_list.append(("Ours", ours_p))
-
-    # Convert to Dict
-    grid_inputs = {label: path for label, path in grid_list}
-
-    # --- Step 5: Stack ---
-    try:
-        print(f"Stacking {len(grid_inputs)} videos into {output_path}...")
-        stack_videos.stack_videos(grid_inputs, output_path, cols=3)
-        return output_path
-    except Exception as e:
-        print(f"Error in stack_videos: {e}")
-        return None
-
-if __name__ == "__main__":
-    output_dir = "./videos/First Frame Stylization and Baseline Comparison/"
-    os.makedirs(output_dir, exist_ok=True)
-
-    for idx, example in enumerate(good_examples):
-        save_path = os.path.join(output_dir, str(idx) + ".mp4")
-        result = visualize_mesh(example, save_path)
-        
-        if result:
-            print(f"Successfully created: {result}")
-        else:
-            print(f"Failed to create example {idx}")

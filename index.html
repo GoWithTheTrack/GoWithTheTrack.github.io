@@ -8,11 +8,11 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
+            background-color: #ffffff; /* Changed to White */
+            color: #333333; /* Changed to Dark Grey */
             margin: 0;
             padding: 0;
-            display: flex; /* Flex layout for Sidebar + Main Content */
+            display: flex; 
         }
         
         /* --- Sidebar: Dataset Selection --- */
@@ -20,16 +20,16 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 250px; /* Fixed width for sidebar */
+            width: 250px; 
             height: 100vh;
-            background-color: #181818;
-            border-right: 1px solid #333;
+            background-color: #f4f4f4; /* Changed to Light Grey */
+            border-right: 1px solid #ddd; /* Lighter border */
             padding: 10px;
             z-index: 1002;
             display: flex;
-            flex-direction: column; /* Vertical Stacking */
+            flex-direction: column; 
             gap: 5px;
-            overflow-y: auto; /* Scrollable if many datasets */
+            overflow-y: auto; 
             box-sizing: border-box;
         }
 
@@ -38,16 +38,16 @@
             width: 8px;
         }
         .dataset-nav::-webkit-scrollbar-thumb {
-            background: #444; 
+            background: #ccc; /* Lighter thumb */
             border-radius: 4px;
         }
         .dataset-nav::-webkit-scrollbar-track {
-            background: #181818; 
+            background: #f4f4f4; /* Lighter track */
         }
 
         .dataset-btn {
             background-color: transparent;
-            color: #aaa;
+            color: #555; /* Darker text */
             border: 1px solid transparent;
             padding: 10px 12px;
             border-radius: 6px;
@@ -56,24 +56,24 @@
             font-weight: 500;
             text-align: left;
             transition: all 0.2s;
-            word-break: break-word; /* Handle long dataset names */
+            word-break: break-word; 
             line-height: 1.4;
         }
 
         .dataset-btn:hover {
-            background-color: #2a2d2e;
-            color: #fff;
+            background-color: #e0e0e0; /* Light hover */
+            color: #000;
         }
 
         .dataset-btn.active {
-            background-color: #37373d;
-            color: #fff;
-            border-left: 3px solid #0078d4; /* Accent mark on left */
+            background-color: #dcdcdc; /* Light active state */
+            color: #000;
+            border-left: 3px solid #0078d4; 
         }
 
         /* --- Main Content Layout --- */
         .main-content {
-            margin-left: 250px; /* Leave space for sidebar */
+            margin-left: 250px; 
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -82,7 +82,7 @@
 
         h1 {
             text-align: center;
-            color: #fff;
+            color: #222; /* Dark Heading */
             margin-top: 40px; 
             margin-bottom: 30px;
             font-weight: 300;
@@ -99,15 +99,15 @@
         }
         
         .card {
-            background-color: #000;
+            background-color: #fff; /* White Card */
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Softer shadow */
             width: 90%; 
             max-width: 1000px; 
-            border: 1px solid #333;
+            border: 1px solid #eee; /* Light border */
             min-height: 200px;
-            display: none; /* Hidden by default */
+            display: none; 
         }
         
         .card.visible {
@@ -118,13 +118,13 @@
             width: 100%;
             height: auto;
             display: block;
-            background: #000;
+            background: #f0f0f0; /* Light placeholder */
         }
         
         .caption-box {
             padding: 15px;
-            background-color: #1a1a1a;
-            border-top: 1px solid #333;
+            background-color: #f9f9f9; /* Light caption background */
+            border-top: 1px solid #eee;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
             line-height: 1.5;
@@ -138,11 +138,11 @@
         /* --- File Path Styling --- */
         .file-path {
             padding: 8px 15px;
-            background-color: #111;
-            border-top: 1px solid #222;
+            background-color: #f4f4f4;
+            border-top: 1px solid #ddd;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 11px;
-            color: #666;
+            color: #555;
             word-break: break-all;
             user-select: text;
         }
@@ -231,12 +231,13 @@
 
     <div class="dataset-nav">
         <button class="dataset-btn" data-target="Bullet Time">Bullet Time</button>
-<button class="dataset-btn" data-target="Camera Retrajectory">Camera Retrajectory</button>
+<button class="dataset-btn" data-target="Camera Retargeting">Camera Retargeting</button>
 <button class="dataset-btn" data-target="First Frame Stylization and Baseline Comparison">First Frame Stylization and Baseline Comparison</button>
 <button class="dataset-btn" data-target="Keypoint-based Appearance Transfer">Keypoint-based Appearance Transfer</button>
 <button class="dataset-btn" data-target="Mesh Stylization">Mesh Stylization</button>
 <button class="dataset-btn" data-target="Multi-Reference Scene Exploration">Multi-Reference Scene Exploration</button>
 <button class="dataset-btn" data-target="Multi-Reference Stylization">Multi-Reference Stylization</button>
+<button class="dataset-btn" data-target="Temporal Stabilization">Temporal Stabilization</button>
 
     </div>
 
@@ -277,136 +278,136 @@
             <video class="lazy" data-src="./videos/Bullet Time/7.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/0.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/0.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/1.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/1.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/10.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/10.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/11.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/11.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/12.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/12.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/13.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/13.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/14.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/14.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/15.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/15.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/16.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/16.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/17.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/17.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/18.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/18.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/19.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/19.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/2.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/20.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/20.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/21.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/21.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/22.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/22.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/23.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/23.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/24.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/24.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/25.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/25.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/26.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/26.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/27.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/27.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/28.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/28.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/29.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/29.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/3.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/3.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/30.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/30.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/31.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/31.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/32.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/32.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/4.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/4.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/5.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/5.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/6.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/6.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/7.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/7.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/8.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/8.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
-        <div class="card" data-dataset="Camera Retrajectory">
-            <video class="lazy" data-src="./videos/Camera Retrajectory/9.mp4" preload="none" controls autoplay loop muted playsinline></video>
+        <div class="card" data-dataset="Camera Retargeting">
+            <video class="lazy" data-src="./videos/Camera Retargeting/9.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
         <div class="card" data-dataset="First Frame Stylization and Baseline Comparison">
@@ -703,6 +704,42 @@
         </div>
         <div class="card" data-dataset="Multi-Reference Stylization">
             <video class="lazy" data-src="./videos/Multi-Reference Stylization/9.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/13470978_1280_720_24fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3135811-hd_1280_720_24fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3326746-hd_1280_720_24fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3327058-hd_1280_720_24fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3327058-hd_1280_720_24fps_lighting_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3770033-hd_1280_720_25fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/3770033-hd_1280_720_25fps_lighting_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/7578544-hd_1280_720_30fps_albedo_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Temporal Stabilization">
+            <video class="lazy" data-src="./videos/Temporal Stabilization/7578544-hd_1280_720_30fps_lighting_Ref2.mp4" preload="none" controls autoplay loop muted playsinline></video>
             
         </div>
         </div>
