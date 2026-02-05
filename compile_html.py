@@ -37,8 +37,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Go-with-the-Track</title>
-    <meta name="description" content="Go-with-the-Track (Go with the Flow)">
+    <title>Go-with-the-Track: Video Compositing and Motion Control with Point Tracking</title>
+    <meta name="description" content="Go-with-the-Track (Go with the Track): Video Compositing and Motion Control with Point Tracking">
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
