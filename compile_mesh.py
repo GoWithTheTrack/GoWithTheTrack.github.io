@@ -47,8 +47,6 @@ good_example = [
                     "stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_8.mp4",
                     "stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_9.mp4",
                     ("mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117.mp4", "wan22_480P_depth"),
-                    ("mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit.mp4", "wan22_480P_depth"),
-                    
                ],
                 [
                     ("stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit_0.mp4", "wan22_480P"),
@@ -60,6 +58,7 @@ good_example = [
                     "stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit_6.mp4",
                     "stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit_7.mp4",
                     "stylized_mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit_9.mp4",
+                    ("mesh_zhizheng_stylized/pour_from_vacuum_flask_and_peel_and_cut_mango-117_orbit.mp4", "wan22_480P_depth"),
                 ],
                 [
                     "stylized_mesh_zhizheng_stylized/test_circle_240_0.mp4",
@@ -136,7 +135,7 @@ good_example = [
                   "stylized_mesh_zhizheng_stylized/trumans_6_96_7.mp4",
                   "stylized_mesh_zhizheng_stylized/trumans_6_96_8.mp4",
                   "stylized_mesh_zhizheng_stylized/trumans_6_96_9.mp4",
-                  ("mesh_zhizheng_stylized/trumans_6_96.mp4", "wan22_480P"),
+                  #("mesh_zhizheng_stylized/trumans_6_96.mp4", "wan22_480P"),
                 ],
 ]
 
