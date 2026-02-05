@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Compilation Summary</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            display: flex; /* Flex layout for Sidebar + Main Content */
+        }
+        
+        /* --- Sidebar: Dataset Selection --- */
+        .dataset-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px; /* Fixed width for sidebar */
+            height: 100vh;
+            background-color: #181818;
+            border-right: 1px solid #333;
+            padding: 10px;
+            z-index: 1002;
+            display: flex;
+            flex-direction: column; /* Vertical Stacking */
+            gap: 5px;
+            overflow-y: auto; /* Scrollable if many datasets */
+            box-sizing: border-box;
+        }
+
+        /* Scrollbar styling for sidebar */
+        .dataset-nav::-webkit-scrollbar {
+            width: 8px;
+        }
+        .dataset-nav::-webkit-scrollbar-thumb {
+            background: #444; 
+            border-radius: 4px;
+        }
+        .dataset-nav::-webkit-scrollbar-track {
+            background: #181818; 
+        }
+
+        .dataset-btn {
+            background-color: transparent;
+            color: #aaa;
+            border: 1px solid transparent;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+            transition: all 0.2s;
+            word-break: break-word; /* Handle long dataset names */
+            line-height: 1.4;
+        }
+
+        .dataset-btn:hover {
+            background-color: #2a2d2e;
+            color: #fff;
+        }
+
+        .dataset-btn.active {
+            background-color: #37373d;
+            color: #fff;
+            border-left: 3px solid #0078d4; /* Accent mark on left */
+        }
+
+        /* --- Main Content Layout --- */
+        .main-content {
+            margin-left: 250px; /* Leave space for sidebar */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-top: 40px; 
+            margin-bottom: 30px;
+            font-weight: 300;
+            font-size: 24px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding-bottom: 100px;
+            width: 100%;
+        }
+        
+        .card {
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            width: 90%; 
+            max-width: 1000px; 
+            border: 1px solid #333;
+            min-height: 200px;
+            display: none; /* Hidden by default */
+        }
+        
+        .card.visible {
+            display: block;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+        
+        .caption-box {
+            padding: 15px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #333;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        
+        .caption-line {
+            display: block;
+        }
+
+        /* --- File Path Styling --- */
+        .file-path {
+            padding: 8px 15px;
+            background-color: #111;
+            border-top: 1px solid #222;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            color: #666;
+            word-break: break-all;
+            user-select: text;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // --- State Management ---
+            let activeDataset = ""; 
+
+            // --- Lazy Loading Logic ---
+            let observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        let video = entry.target;
+                        if (video.dataset.src) {
+                            video.src = video.dataset.src;
+                            video.load();
+                            video.removeAttribute('data-src');
+                        }
+                        observer.unobserve(video);
+                    }
+                });
+            }, { rootMargin: "200px" });
+
+            // --- View Update Logic ---
+            function updateView() {
+                const datasetBtns = document.querySelectorAll('.dataset-btn');
+                const cards = document.querySelectorAll('.card');
+                const title = document.querySelector('h1');
+
+                // 1. Update UI Buttons
+                datasetBtns.forEach(btn => {
+                    if (btn.dataset.target === activeDataset) {
+                        btn.classList.add('active');
+                        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    else btn.classList.remove('active');
+                });
+
+                // 2. Update Title
+                title.innerText = `${activeDataset}`;
+
+                // 3. Filter Cards (Only check dataset now)
+                cards.forEach(card => {
+                    const video = card.querySelector('video');
+                    const belongsToDataset = card.dataset.dataset === activeDataset;
+
+                    if (belongsToDataset) {
+                        card.classList.add('visible');
+                        if (video.classList.contains('lazy')) {
+                            observer.observe(video);
+                        }
+                    } else {
+                        card.classList.remove('visible');
+                        if (!video.paused) {
+                            video.pause();
+                        }
+                    }
+                });
+                
+                // Reset scroll of main window
+                window.scrollTo(0, 0);
+            }
+
+            // --- Event Listeners ---
+            
+            // Dataset Clicks
+            document.querySelectorAll('.dataset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeDataset = btn.dataset.target;
+                    updateView();
+                });
+            });
+
+            // --- Initialization ---
+            // Select the first dataset button available
+            const firstDatasetBtn = document.querySelector('.dataset-btn');
+            if (firstDatasetBtn) {
+                activeDataset = firstDatasetBtn.dataset.target;
+            }
+            updateView();
+        });
+    </script>
+</head>
+<body>
+
+    <div class="dataset-nav">
+        <button class="dataset-btn" data-target="Mesh Stylization">Mesh Stylization</button>
+
+    </div>
+
+    <div class="main-content">
+        <h1>Dataset: Loading...</h1>
+        
+        <div class="container">
+            
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/0.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/1.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/10.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/11.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/2.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/3.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/4.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/5.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/6.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/7.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/8.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        <div class="card" data-dataset="Mesh Stylization">
+            <video class="lazy" data-src="./videos/Mesh Stylization/9.mp4" preload="none" controls autoplay loop muted playsinline></video>
+            
+        </div>
+        </div>
+    </div>
+
+</body>
+</html>
